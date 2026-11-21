@@ -3,6 +3,7 @@
 #include "quad.h"
 #include "rend/osd.h"
 #include "naomi2.h"
+#include "ui/perf_counters.h"
 #ifdef LIBRETRO
 #include "postprocess.h"
 #include "vmu_xhair.h"
@@ -750,7 +751,9 @@ void writeFramebufferToVRAM()
 	tmp_buf.init(width, height);
 
 	u8 *p = (u8 *)tmp_buf.data();
+	const perf::Clock::time_point waitStart = perf::Clock::now();
 	glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, p);
+	perf::addSyncWait(perf::elapsedMs(waitStart));
 
 	WriteFramebuffer(width, height, p, tex_addr, gl.rendContext->fb_W_CTRL, linestride, finalClip);
 

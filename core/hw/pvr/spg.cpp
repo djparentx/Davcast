@@ -7,6 +7,7 @@
 #include "network/ggpo.h"
 #include "hw/pvr/Renderer_if.h"
 #include "stdclass.h"
+#include "ui/perf_counters.h"
 #include <array>
 
 #ifdef TEST_AUTOMATION
@@ -163,6 +164,7 @@ static int spg_line_sched(int tag, int cycles, int jitter, void *arg)
 				SPG_STATUS.fieldnum = 0;
 
 			rend_vblank();
+			perf::onVblank();
 
 			u64 now = getTimeMs();
 			cpu_time_idx = (cpu_time_idx + 1) % cpu_cycles.size();

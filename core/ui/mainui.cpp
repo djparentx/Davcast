@@ -27,6 +27,7 @@
 #include "imgui_driver.h"
 #include "profiler/fc_profiler.h"
 #include "oslib/i18n.h"
+#include "perf_counters.h"
 
 #include <chrono>
 #include <thread>
@@ -76,6 +77,7 @@ bool mainui_rend_frame()
 		}
 	}
 	MainFrameCount++;
+	perf::onFrame();
 
 	return true;
 }
@@ -108,7 +110,9 @@ void mainui_loop(bool forceStart)
 		if (mainui_rend_frame() && imguiDriver != nullptr)
 		{
 			try {
+				const perf::Clock::time_point presentStart = perf::Clock::now();
 				imguiDriver->present();
+				perf::addPresentTime(perf::elapsedMs(presentStart));
 			} catch (const FlycastException& e) {
 				forceReinit = true;
 			}

@@ -53,6 +53,7 @@
 #include "settings.h"
 #include "oslib/i18n.h"
 #include "gui_font.h"
+#include "perf_counters.h"
 using namespace i18n;
 
 #ifdef _WIN32
@@ -1428,14 +1429,52 @@ static std::string getFPSNotification()
 			LastFPSTime = now;
 			lastFrameCount = MainFrameCount;
 		}
-		if (fps >= 0.f && fps < 9999.f) {
-			char text[32];
-			snprintf(text, sizeof(text), "F:%4.1f%s", fps, settings.input.fastForwardMode ? " >>" : "");
-
-			return std::string(text);
-		}
 	}
-	return std::string(settings.input.fastForwardMode ? ">>" : "");
+	char text[64];
+	std::string message;
+	if (config::ShowFPS && fps >= 0.f && fps < 9999.f)
+	{
+		snprintf(text, sizeof(text), "F:%4.1f", fps);
+		message = text;
+	}
+	if (config::ShowSpeed)
+	{
+		snprintf(text, sizeof(text), "%s%d%%", message.empty() ? "" : " | ", (int)std::round(perf::getSpeed()));
+		message += text;
+	}
+	if (settings.input.fastForwardMode)
+		message += message.empty() ? ">>" : " >>";
+
+	if (config::ShowCPU)
+	{
+		snprintf(text, sizeof(text), "\n%.2fms | %.2fms | %.2fms", perf::getMinFrameTime(), perf::getAvgFrameTime(),
+				perf::getMaxFrameTime());
+		message += text;
+		const float usage = perf::getEmuCpuUsage();
+		if (usage >= 99.95f)
+			snprintf(text, sizeof(text), "\nCPU: 100%% (%.2fms)", perf::getEmuCpuTime());
+		else
+			snprintf(text, sizeof(text), "\nCPU: %.1f%% (%.2fms)", usage, perf::getEmuCpuTime());
+		message += text;
+	}
+	if (config::ShowGPU)
+	{
+		const float usage = perf::getRendCpuUsage();
+		if (usage >= 99.95f)
+			snprintf(text, sizeof(text), "\nGPU: 100%% (%.2fms)", perf::getRendCpuTime());
+		else
+			snprintf(text, sizeof(text), "\nGPU: %.1f%% (%.2fms)", usage, perf::getRendCpuTime());
+		message += text;
+		// TEMPORARY diagnostics, remove after optimization
+		snprintf(text, sizeof(text), "\nPresent: %.2fms avg, %.2fms max", perf::getPresentAvg(), perf::getPresentMax());
+		message += text;
+		snprintf(text, sizeof(text), "\nGPU sync waits: %.2fms/frame", perf::getSyncWaitAvg());
+		message += text;
+	}
+	if (!message.empty() && message[0] == '\n')
+		message.erase(0, 1);
+
+	return message;
 }
 
 void gui_draw_osd()

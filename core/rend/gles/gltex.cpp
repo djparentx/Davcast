@@ -1,6 +1,7 @@
 #include "glcache.h"
 #include "gles.h"
 #include "hw/pvr/pvr_mem.h"
+#include "ui/perf_counters.h"
 
 #include <memory>
 
@@ -245,7 +246,9 @@ void ReadRTTBuffer()
 				&& gl.rendContext->fbClip.size.x >= (int)w
 				&& gl.rendContext->fbClip.size.y >= (int)h)
 		{
+			const perf::Clock::time_point waitStart = perf::Clock::now();
 			glReadPixels(0, 0, w, h, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, dst);
+			perf::addSyncWait(perf::elapsedMs(waitStart));
 		}
 		else
 		{
@@ -253,8 +256,9 @@ void ReadRTTBuffer()
 			tmp_buf.init(w, h);
 
 			u8 *p = (u8 *)tmp_buf.data();
+			const perf::Clock::time_point waitStart = perf::Clock::now();
 			glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, p);
-
+			perf::addSyncWait(perf::elapsedMs(waitStart));
 			WriteTextureToVRam(w, h, p, dst, gl.rendContext->fb_W_CTRL, linestride, gl.rendContext->fbClip);
 		}
 		glCheck();

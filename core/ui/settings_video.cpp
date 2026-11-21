@@ -386,6 +386,9 @@ void gui_settings_video()
     	ImGui::Columns(1, nullptr, false);
 
     	OptionCheckbox(T("Show FPS Counter"), config::ShowFPS, T("Show on-screen frame/sec counter"));
+    	OptionCheckbox(T("Show Speed Counter"), config::ShowSpeed, T("Show on-screen emulation speed percentage"));
+    	OptionCheckbox(T("Show CPU Usage"), config::ShowCPU, T("Show on-screen emulation thread CPU usage"));
+    	OptionCheckbox(T("Show GPU Usage"), config::ShowGPU, T("Show on-screen render thread usage"));
     }
 #ifdef VIDEO_ROUTING
 	ImGui::Spacing();

@@ -23,6 +23,7 @@
 #include "imgui.h"
 #include "imgui_impl_vulkan.h"
 #include "ui/gui.h"
+#include "ui/perf_counters.h"
 #ifdef USE_SDL
 #include <sdl/sdl.h>
 #include <SDL_vulkan.h>
@@ -993,7 +994,9 @@ void VulkanContext::NewFrame()
 	if (res != vk::Result::eSuccess)
 		throw InvalidVulkanContext();
 	try {
+		const perf::Clock::time_point waitStart = perf::Clock::now();
 		res = device->waitForFences(*drawFences[currentImage], true, UINT64_MAX);
+		perf::addSyncWait(perf::elapsedMs(waitStart));
 		if (res != vk::Result::eSuccess)
 			throw InvalidVulkanContext();
 	} catch (const vk::SystemError& e) {

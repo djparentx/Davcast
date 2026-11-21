@@ -16,6 +16,8 @@ if(NOT LIBRETRO)
             gui_util.h
             mainui.cpp
             mainui.h
+            perf_counters.cpp
+            perf_counters.h
             settings.cpp
             settings.h
             settings_about.cpp

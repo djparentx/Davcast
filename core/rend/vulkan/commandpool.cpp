@@ -18,6 +18,7 @@
 */
 #include "commandpool.h"
 #include "vulkan_context.h"
+#include "ui/perf_counters.h"
 
 void CommandPool::Init(size_t chainSize)
 {
@@ -64,7 +65,9 @@ void CommandPool::BeginFrame()
 		return;
 	frameStarted = true;
 	index = (index + 1) % chainSize;
+	const perf::Clock::time_point waitStart = perf::Clock::now();
 	vk::Result res = device.waitForFences(fences[index].get(), true, UINT64_MAX);
+	perf::addSyncWait(perf::elapsedMs(waitStart));
 	if (res != vk::Result::eSuccess)
 		WARN_LOG(RENDERER, "CommandPool::BeginFrame: waitForFences failed %d", (int)res);
 	std::vector<vk::UniqueCommandBuffer>& inFlightBuf = inFlightBuffers[index];
@@ -120,7 +123,9 @@ vk::CommandBuffer CommandPool::Allocate(bool submitLast)
 void CommandPool::EndFrameAndWait()
 {
 	EndFrame();
+	const perf::Clock::time_point waitStart = perf::Clock::now();
 	vk::Result res = device.waitForFences(fences[index].get(), true, UINT64_MAX);
+	perf::addSyncWait(perf::elapsedMs(waitStart));
 	if (res != vk::Result::eSuccess)
 		WARN_LOG(RENDERER, "CommandPool::waitForCommandCompletion: waitForFences failed %d", (int)res);
 	inFlightObjects[index].clear();
